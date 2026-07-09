@@ -106,9 +106,3 @@ Sau khi máy chủ khởi động thành công, hãy mở trình duyệt web và
    - Dự báo trạng thái tinh thần ngày mai.
    - Đề xuất cải thiện tâm lý thời gian thực từ AI.
 3. Nhấp vào nút **Xuất Báo cáo PDF** để lưu trữ tài liệu báo cáo tiếng Việt chuyên nghiệp chứa toàn bộ thông số phân tích này về máy tính cá nhân.
-
----
-
-## 👥 Tác giả & Giấy phép
-* **Nhóm phát triển:** DeepAI Team
-* **Mã nguồn mở:** Phát hành dưới giấy phép MIT License.
