@@ -1,0 +1,8 @@
+flask
+opencv-python
+numpy
+pandas
+onnxruntime
+reportlab
+scikit-learn
+scikit-image

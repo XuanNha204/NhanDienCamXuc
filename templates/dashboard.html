@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Nhận diện Cảm xúc - Dashboard</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-size/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom Premium CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-logo">
+            <i class="fa-solid fa-face-smile"></i>
+            <span>DeepAI Emotion</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link"><i class="fa-solid fa-video me-2"></i>Live Camera</a>
+            <a href="/dashboard" class="nav-link active"><i class="fa-solid fa-chart-line me-2"></i>Analytics Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Filter Bar -->
+        <div class="header-section">
+            <div class="title-desc">
+                <h1>Analytics Dashboard</h1>
+                <p>Thống kê xu hướng tâm trạng, dự báo tâm lý và các lời khuyên sức khỏe tinh thần từ AI.</p>
+            </div>
+            
+            <div class="user-controls">
+                <select id="dashboard-user-select" class="custom-select">
+                    <!-- Loaded dynamically -->
+                </select>
+                
+                <button id="btn-export-pdf" class="btn btn-primary" disabled>
+                    <i class="fa-solid fa-file-pdf"></i> Xuất Báo cáo PDF
+                </button>
+            </div>
+        </div>
+
+        <div id="no-data-alert" class="glass-card text-center py-5 mb-4">
+            <i class="fa-solid fa-circle-info fa-3x text-secondary mb-3"></i>
+            <h3>Chưa có dữ liệu thống kê</h3>
+            <p class="text-secondary">Người dùng được chọn chưa có lịch sử ghi nhận cảm xúc. Hãy quay lại Live Camera để ghi log cảm xúc trước.</p>
+            <a href="/" class="btn btn-primary mt-3"><i class="fa-solid fa-video me-2"></i>Đi tới Live Camera</a>
+        </div>
+
+        <div id="dashboard-content" class="d-none">
+            <!-- Key Metrics Row -->
+            <div class="metrics-row">
+                <!-- Total Logs -->
+                <div class="glass-card metric-card">
+                    <span class="metric-label">Tổng số bản ghi</span>
+                    <span id="metric-total-logs" class="metric-value">0</span>
+                </div>
+                <!-- Dominant Emotion -->
+                <div class="glass-card metric-card">
+                    <span class="metric-label">Cảm xúc chủ đạo</span>
+                    <span id="metric-dominant-emotion" class="metric-value">Neutral</span>
+                </div>
+                <!-- Accuracy -->
+                <div class="glass-card metric-card">
+                    <span class="metric-label">Độ tin cậy TB</span>
+                    <span id="metric-avg-conf" class="metric-value">0.0%</span>
+                </div>
+                <!-- Prediction Tomorrow -->
+                <div class="glass-card metric-card">
+                    <span class="metric-label">Dự báo ngày mai (AI)</span>
+                    <span id="metric-predict-tomorrow" class="metric-value">Neutral</span>
+                </div>
+            </div>
+
+            <!-- AI Recommendation and Tomorrow Prediction Details -->
+            <div class="row mb-4">
+                <div class="col-md-7 mb-4 mb-md-0">
+                    <div class="glass-card h-100">
+                        <h2 class="fs-5 fw-bold mb-3 text-info"><i class="fa-solid fa-brain me-2"></i>Đề xuất chăm sóc sức khỏe tâm thần</h2>
+                        <div class="rec-box">
+                            <div id="rec-status" class="rec-title">Trạng thái: Ổn định</div>
+                            <p id="rec-message" class="text-light mb-0" style="font-size: 14px;">Bạn đang có tâm trạng cân bằng.</p>
+                        </div>
+                        <h3 class="fs-6 fw-bold mb-2">Đề xuất hành động:</h3>
+                        <ul id="rec-list" class="rec-list">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="glass-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h2 class="fs-5 fw-bold mb-3 text-purple"><i class="fa-solid fa-crystal-ball me-2"></i>Phân tích Xu hướng & Dự báo</h2>
+                            <p class="text-secondary" style="font-size: 14px;">
+                                Thuật toán **Xích Markov & Random Forest** phân tích sự dịch chuyển cảm xúc giữa các ngày để đưa ra dự báo xu hướng ngày tiếp theo.
+                            </p>
+                        </div>
+                        <div class="text-center py-3">
+                            <span id="pred-emoji" style="font-size: 64px;">😐</span>
+                            <h3 id="pred-title" class="fw-bold mt-2">Neutral</h3>
+                            <p id="pred-desc" class="text-secondary mb-0">Xác suất xảy ra: 0.0%</p>
+                        </div>
+                        <div class="text-secondary text-center" style="font-size: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                            Dữ liệu tự động cập nhật sau mỗi lần quét camera
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="glass-card chart-card">
+                    <h2 class="fs-5 fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-success"></i>Tỷ lệ Phân bố Cảm xúc (7 ngày)</h2>
+                    <div style="position: relative; height: 260px; width: 100%;">
+                        <canvas id="distribution-chart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card chart-card">
+                    <h2 class="fs-5 fw-bold mb-3"><i class="fa-solid fa-chart-area me-2 text-primary"></i>Biến động Cảm xúc theo Thời gian</h2>
+                    <div style="position: relative; height: 260px; width: 100%;">
+                        <canvas id="timeline-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hourly Heatmap Grid -->
+            <div class="glass-card mb-4">
+                <h2 class="fs-5 fw-bold mb-2"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>Bản đồ nhiệt Khung giờ Tích cực (Heatmap)</h2>
+                <p class="text-secondary mb-3" style="font-size: 13px;">Hiển thị tần suất các lần nhận dạng cảm xúc tích cực (Happy, Surprise) theo giờ trong ngày và ngày trong tuần. Khung giờ sáng màu hơn biểu thị mức độ vui vẻ cao hơn.</p>
+                <div class="heatmap-container" id="heatmap-grid">
+                    <!-- Generated via JS -->
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Snapshots Gallery -->
+                <div class="col-md-7 mb-4 mb-md-0">
+                    <div class="glass-card h-100">
+                        <h2 class="fs-5 fw-bold mb-2"><i class="fa-solid fa-images me-2 text-info"></i>Thư viện ảnh khuôn mặt snapshot</h2>
+                        <p class="text-secondary" style="font-size: 13px;">Lưu giữ hình ảnh chụp khuôn mặt từ camera ứng với mỗi lần log cảm xúc thành công.</p>
+                        <div id="gallery-grid" class="gallery-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PDF Reports History -->
+                <div class="col-md-5">
+                    <div class="glass-card h-100">
+                        <h2 class="fs-5 fw-bold mb-3"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>Lịch sử Báo cáo PDF đã xuất</h2>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped table-hover mb-0" style="font-size: 13px; --bs-table-bg: transparent; --bs-table-border-color: rgba(255,255,255,0.05);">
+                                <thead>
+                                    <tr>
+                                        <th>Tên file</th>
+                                        <th>Ngày tạo</th>
+                                        <th>Tải về</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reports-table-body">
+                                    <tr>
+                                        <td colspan="3" class="text-center text-secondary py-4">Chưa có báo cáo nào được xuất</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Dashboard JS -->
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

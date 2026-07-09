@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Nhận diện Cảm xúc Khuôn mặt - Live</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-size/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom Premium CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-logo">
+            <i class="fa-solid fa-face-smile"></i>
+            <span>DeepAI Emotion</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link active"><i class="fa-solid fa-video me-2"></i>Live Camera</a>
+            <a href="/dashboard" class="nav-link"><i class="fa-solid fa-chart-line me-2"></i>Analytics Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="header-section">
+            <div class="title-desc">
+                <h1>Live Emotion Recognition</h1>
+                <p>Nhận diện khuôn mặt, phân tích cảm xúc và tự động nhận dạng danh tính người dùng thời gian thực.</p>
+            </div>
+            
+            <!-- Connection Status & User Profile selection -->
+            <div class="user-controls">
+                <div class="status-pill me-2">
+                    <span id="status-dot" class="status-dot inactive"></span>
+                    <span id="status-text">Camera Off</span>
+                </div>
+                
+                <select id="user-select" class="custom-select">
+                    <option value="">-- Chọn User Profile --</option>
+                </select>
+                
+                <button id="btn-add-user" class="btn btn-secondary" title="Thêm User mới">
+                    <i class="fa-solid fa-user-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            <!-- Left Column: Camera Feed -->
+            <div>
+                <div class="glass-card mb-4">
+                    <div class="camera-container">
+                        <video id="webcam-video" autoplay playsinline muted></video>
+                        <canvas id="overlay-canvas"></canvas>
+                        
+                        <div id="camera-placeholder" class="camera-placeholder">
+                            <i class="fa-solid fa-video-slash fa-3x"></i>
+                            <p>Camera chưa được kích hoạt</p>
+                            <button id="btn-start-camera-placeholder" class="btn btn-primary">
+                                <i class="fa-solid fa-power-off"></i> Kích hoạt Camera
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="camera-actions">
+                        <div class="action-buttons">
+                            <button id="btn-toggle-camera" class="btn btn-primary">
+                                <i class="fa-solid fa-video"></i> Bật Camera
+                            </button>
+                            <button id="btn-snapshot" class="btn btn-secondary" disabled>
+                                <i class="fa-solid fa-camera"></i> Chụp Snapshot
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <button id="btn-register-face" class="btn btn-secondary" disabled>
+                                <i class="fa-solid fa-id-card"></i> Đăng ký Khuôn mặt
+                            </button>
+                            
+                            <div class="toggle-container">
+                                <span class="text-secondary" style="font-size: 14px;">Tự động lưu log (3s)</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-autolog">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Recognized Emotion Banner -->
+                <div class="glass-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h2 class="fs-5 fw-bold mb-0">Kết quả nhận diện thực tế</h2>
+                        <span id="identity-badge" class="badge bg-primary px-3 py-2 fs-6 d-none">
+                            <i class="fa-solid fa-user-check me-2"></i><span id="identity-name">Unknown</span>
+                        </span>
+                    </div>
+                    
+                    <div id="emotion-banner" class="emotion-banner">
+                        <div id="banner-emoji" class="emotion-emoji">😐</div>
+                        <div class="emotion-details">
+                            <h3>CẢM XÚC CHỦ ĐẠO</h3>
+                            <div id="banner-name" class="emotion-name">
+                                Neutral <span class="text-secondary fs-5">(0.0%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Emotion Analysis Bars & History -->
+            <div>
+                <!-- Emotion Probability Bars -->
+                <div class="glass-card mb-4">
+                    <h2 class="fs-5 fw-bold mb-3"><i class="fa-solid fa-chart-bar me-2 text-info"></i>Phân tích Xác suất Cảm xúc</h2>
+                    <div class="emotion-bars">
+                        <!-- Happy -->
+                        <div class="bar-row">
+                            <span class="bar-label">😊 Happy</span>
+                            <div class="bar-container">
+                                <div id="bar-Happy" class="bar-fill" style="background-color: var(--color-happy);"></div>
+                            </div>
+                            <span id="val-Happy" class="bar-value">0%</span>
+                        </div>
+                        <!-- Surprise -->
+                        <div class="bar-row">
+                            <span class="bar-label">😲 Surprise</span>
+                            <div class="bar-container">
+                                <div id="bar-Surprise" class="bar-fill" style="background-color: var(--color-surprise);"></div>
+                            </div>
+                            <span id="val-Surprise" class="bar-value">0%</span>
+                        </div>
+                        <!-- Neutral -->
+                        <div class="bar-row">
+                            <span class="bar-label">😐 Neutral</span>
+                            <div class="bar-container">
+                                <div id="bar-Neutral" class="bar-fill" style="background-color: var(--color-neutral);"></div>
+                            </div>
+                            <span id="val-Neutral" class="bar-value">0%</span>
+                        </div>
+                        <!-- Sad -->
+                        <div class="bar-row">
+                            <span class="bar-label">😢 Sad</span>
+                            <div class="bar-container">
+                                <div id="bar-Sad" class="bar-fill" style="background-color: var(--color-sad);"></div>
+                            </div>
+                            <span id="val-Sad" class="bar-value">0%</span>
+                        </div>
+                        <!-- Angry -->
+                        <div class="bar-row">
+                            <span class="bar-label">😡 Angry</span>
+                            <div class="bar-container">
+                                <div id="bar-Angry" class="bar-fill" style="background-color: var(--color-angry);"></div>
+                            </div>
+                            <span id="val-Angry" class="bar-value">0%</span>
+                        </div>
+                        <!-- Disgust -->
+                        <div class="bar-row">
+                            <span class="bar-label">🤢 Disgust</span>
+                            <div class="bar-container">
+                                <div id="bar-Disgust" class="bar-fill" style="background-color: var(--color-disgust);"></div>
+                            </div>
+                            <span id="val-Disgust" class="bar-value">0%</span>
+                        </div>
+                        <!-- Fear -->
+                        <div class="bar-row">
+                            <span class="bar-label">😱 Fear</span>
+                            <div class="bar-container">
+                                <div id="bar-Fear" class="bar-fill" style="background-color: var(--color-fear);"></div>
+                            </div>
+                            <span id="val-Fear" class="bar-value">0%</span>
+                        </div>
+                        <!-- Contempt -->
+                        <div class="bar-row">
+                            <span class="bar-label">😒 Contempt</span>
+                            <div class="bar-container">
+                                <div id="bar-Contempt" class="bar-fill" style="background-color: var(--color-contempt);"></div>
+                            </div>
+                            <span id="val-Contempt" class="bar-value">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Snapshots List -->
+                <div class="glass-card">
+                    <div class="logs-header">
+                        <h2><i class="fa-solid fa-history me-2 text-warning"></i>Nhật ký phiên nhận diện</h2>
+                        <a href="/dashboard" class="text-info text-decoration-none" style="font-size: 13px;">Xem báo cáo <i class="fa-solid fa-angle-right"></i></a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="log-table">
+                            <thead>
+                                <tr>
+                                    <th>Ảnh</th>
+                                    <th>Thời gian</th>
+                                    <th>Cảm xúc</th>
+                                    <th>Độ tin cậy</th>
+                                </tr>
+                            </thead>
+                            <tbody id="session-logs-body">
+                                <tr>
+                                    <td colspan="4" class="text-center text-secondary py-4">Chưa có nhật ký ghi nhận</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add User -->
+    <div id="modal-add-user" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="fs-5 fw-bold mb-0">Thêm User Profile mới</h3>
+                <button class="modal-close" id="btn-close-add-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="input-user-name">Họ và Tên</label>
+                <input type="text" id="input-user-name" class="form-input" placeholder="Ví dụ: Nhã, Phong..." required>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-add-user">Hủy</button>
+                <button class="btn btn-primary" id="btn-save-user">Lưu Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Register Face -->
+    <div id="modal-register-face" class="modal-overlay">
+        <div class="modal-content" style="width: 480px;">
+            <div class="modal-header">
+                <h3 class="fs-5 fw-bold mb-0"><i class="fa-solid fa-id-card me-2 text-info"></i>Đăng ký Nhận dạng Khuôn mặt</h3>
+                <button class="modal-close" id="btn-close-reg-modal">&times;</button>
+            </div>
+            <div class="reg-container">
+                <p class="text-light" style="font-size: 15px;">
+                    Hệ thống sẽ chụp 15 ảnh khuôn mặt của bạn để huấn luyện thuật toán nhận diện tự động.
+                </p>
+                <div class="reg-progress-bar">
+                    <div id="reg-progress-fill" class="reg-progress-fill"></div>
+                </div>
+                <div id="reg-status" class="fw-bold text-info">Sẵn sàng thu thập: 0/15 ảnh</div>
+                <div id="reg-instruction" class="reg-instruction">
+                    Hãy nhìn thẳng vào camera và nhấn nút bắt đầu.
+                </div>
+                
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <button class="btn btn-secondary" id="btn-cancel-reg">Hủy bỏ</button>
+                    <button class="btn btn-primary" id="btn-start-reg">Bắt đầu quét</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Main JS logic -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
